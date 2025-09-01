@@ -1,0 +1,726 @@
+terraform complete notes
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+}
+
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+count = 2
+ami = ""
+instance_type = "t2.micro"
+}
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = var.instance_type
+}
+
+variable "instance_type" {
+description = ""
+type = string
+default = "t2.micro"
+}
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+count = var.instance_count
+}
+
+variable "instance_count" {
+description = ""
+type = number
+default =3
+}
+
+
+
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro""
+instance_type = var.instance_count
+}
+
+variable "instance_count" {
+description = ""
+type = number
+default = 2
+}
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_iam_user" "two" {
+count = length(var.user_names)
+name = var.user_names[count.index]
+}
+
+variable "user_names" {
+description = ""
+type = list(string)
+default = ["vinod", "chandhu", "nagesh", "anil"]
+}
+
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = var.instance_tags
+}
+
+
+variable "instance_tags" {
+description = ""
+type = map(string)
+default = {
+Name = "appserver"
+Env = "prod"
+Client = "swiggy"
+Com = "Tcs"
+}
+}
+
+
+main.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = var.instance_type
+tags = {
+Name = var.instance_name
+}
+}
+
+vi variable.tf
+
+variable "instance_type" {
+}
+
+variable "instance_name" {
+}
+
+vi swiggy.tfvars
+
+instance_type = "t2.micro"
+
+instance_name = "swiggy"
+
+vi zomato.tfvars
+
+instance_type = "t2.large"
+
+instance = "zomato"
+
+terraform apply -var.file="swiggy.tfvars" --auto-approve
+
+rm -rf swiggy.tfvars
+rm -rf zomato.tfvars
+rm -rf vatiable.tf
+
+#through command line 
+vi main.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = var.instance_type
+tags = {
+Name = "Swiggy"
+}
+}
+
+variable "instance_type" {
+}
+
+terraform apply -vars="instance_type=t2.micro"
+
+#terraform output value
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Name = "Nagesh"
+}
+}
+
+output "instance_atributes" {
+value = aws_instance.one.public_ip
+}
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Name = var.instance_name
+}
+}
+
+output "instance_atributes" {
+value = [aws_instance.one.public_ip, aws_instance.one.private_ip]
+}
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Name = var.instance_name
+}
+}
+
+output "instance_atributes" {
+value = [aws_instance.one.public_ip, aws_instance.one.private_ip, aws_instance.one.volume_id, aws_instance.one.public_dns]
+}
+
+
+#terraform local
+
+vi main.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+locals {
+staging_env = "prod"
+}
+
+resource "aws_vpc" "one" {
+cidr_block = "10.5.0.0/16"
+tags = {
+Name = "${local.string_env}-vpc"
+}
+}
+
+resource "aws_instance" "two" {
+vpc_id = aws_vpc.one.vpc.id
+cidr_block = "10.5.0.0/16"
+tags = {
+Name = "${local.staging_env}-subnet"
+}
+}
+
+
+resource "aws_instance" "three" {
+ami = ""
+instance_type = "t2.micro"
+subnet_id = aws_subnet.two.id
+tags = {
+Name = "${local.staging_env}-instance"
+}
+}
+
+resource "aws_s3_bucket" "four" {
+bucket = "agt1234567"
+}
+
+
+terraform fmt
+terraform validate
+terraform graph
+
+terraform destroy -target=aws_s3_bucket.four
+terraform apply -target=aws_s3_bucket.four
+
+# create EBS volume
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_ebs_volume" "example" {
+  availability_zone = "ap-south-1"
+  size              = 40
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+
+# terraform EFS
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_efs_file_system" "foo" {
+  creation_token = "my-product"
+
+  tags = {
+    Name = "MyProduct"
+  }
+}
+
+
+# Terraform wokspace
+
+
+
+vim main.tf 
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+locals {
+env_name = "${terraform.workspace}-"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Name = local.env_name
+}
+}
+
+resource "aws_ebs_volume" "example" {
+  availability_zone = "ap-south-1"
+  size              = 40
+
+  tags = {
+    Name = local.env_name
+  }
+}
+
+
+terraform init
+terraform plan
+terraform apply --auto-approve
+terraform workspace new prod
+terraform destroy --auto-approve
+
+
+terraform workspace show
+terraform workspace list
+terraform workspace test
+terraform workspace select default
+terraform workspace delete prod
+
+#Alias and providers
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+provider "aws" {
+alias = "east"
+region = "us-east-1"
+}
+
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Name = "mumbai"
+}
+}
+
+resource "aws_instance" "two" {
+ami = ""
+instance_type = "t2.micro"
+provider = "aws.east"
+tags = {
+Name = "nvirgina"
+}
+}
+
+terraform destroy --auto-approve
+
+# local files concept
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "local_file" "one" {
+filename = "/root/nagesh.txt"
+content = "hai all good morning"
+}
+
+terraform init
+terraform palan
+terraform fmt
+terraform validate
+terraform apply --auto-approve
+terraform destroy --auto-approve
+
+# terraform versioning
+
+vi main.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.49.0"
+    }
+  }
+}
+
+terraform init -upgrade
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+
+terraform {
+  required_providers {
+    local = {
+      source = "hashicorp/local"
+      version = "2.5.1"
+    }
+  }
+}
+
+terraform init -upgrade
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+
+terraform {
+  required_providers {
+    local = {
+      source = "hashicorp/local"
+      version = "<2.5.1"
+    }
+  }
+}
+
+terraform init -upgrade
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+
+terraform {
+  required_providers {
+    local = {
+      source = "hashicorp/local"
+      version = ">2.0.0, <2.2.3"
+    }
+  }
+}
+
+terraform init -upgrade
+
+# terraform modules
+
+vi main.tf
+
+module "my_instance_module" {
+ source = "./modules/instances"
+ ami = "ami-069f1a13711c4eb69"
+ instance_type = "t2.micro"
+ instance_name = "myvm01"
+}
+module "s3_module" {
+source = "./modules/buckets"
+bucket_name = "abc123456"
+}
+
+vi provider.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+
+mkdir modules
+cd modules/
+mkdir instances
+mkdir buckets
+ll
+cd instances/
+vi main.tf
+
+resource "aws_instance" "my_instance" {
+ ami = var.ami
+ instance_type = var.instance_type
+ tags = {
+ Name = var.instance_name
+ }
+}
+
+vi variable.tf
+
+variable "ami" {
+ type = string
+}
+variable "instance_type" {
+ type = string
+}
+variable "instance_name" {
+ description = "Value of the Name tag for the EC2 instance"
+ type = string
+}
+
+cd 
+yum install tree
+
+cd modules/buckets/
+vim main.tf
+
+resource "aws_s3_bucket" "b" {
+bucket = var.bucket_name
+}
+
+vi variable.tf
+
+variable "bucket_name" {
+type = string
+}
+
+cd 
+terraform init
+terraform apply --auto-approve
+terraform destroy --auto-approve
+rm -rf modules/
+
+# terraform lifecycle
+
+vi main.tf
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = ""
+instance_type = "t2.micro"
+tags = {
+Nmae = "mumbai"
+}
+lifecycle {
+prevent_destroy = true
+}
+}
+
+terraform init
+terraform plan
+terraform apply --auto-approve
+
+
+
+
+Day2
+
+Multicloud 
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+provider "azurerm" {
+  subscription_id = "your-azure-subscription-id"
+  client_id = "your-azure-client-id"
+  client_secret = "your-azure-client-secret"
+  tenant_id = "your-azure-tenant-id"
+}
+
+resource "aws_instance" "example" {
+  ami = "ami-0123456789abcdef0"
+  instance_type = "t2.micro"
+}
+
+resource "azurerm_virtual_machine" "example" {
+  name = "example-vm"
+  location = "eastus"
+  size = "Standard_A1"
+}
+
+Multi region terraform file
+
+provider "aws" {
+  alias = "us-east-1"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias = "us-west-2"
+  region = "us-west-2"
+}
+
+resource "aws_instance" "example" {
+  ami = "ami-0123456789abcdef0"
+  instance_type = "t2.micro"
+  provider = "aws.us-east-1"
+}
+
+resource "aws_instance" "example2" {
+  ami = "ami-0123456789abcdef0"
+  instance_type = "t2.micro"
+  provider = "aws.us-west-2"
+}
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+count = 2
+ami = "ami-0b41f7055516b991a"
+instance_type = "t2.micro"
+}
+
+
+VARIABLE CONCEPT
+there are two variables 
+inputput variable
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = "ami-0b41f7055516b991a"
+instance_type = var.instance_type
+}
+
+variable "instance_type" {
+description = ""
+type = string
+default = "t2.micro"
+}
+
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_instance" "one" {
+ami = "ami-0b41f7055516b991a"
+instance_type = "t2.micro"
+count = var.instance_count
+}
+
+variable "instance_count" {
+description = ""
+type = number
+default = 3
+}
+
+HOW TO COMMENT TERRAFORM FILE
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+/*resource "aws_instance" "one" {
+ami = "ami-0b41f7055516b991a"
+instance_type = "t2.micro"
+count = var.instance_count*/
+}
+
+variable "instance_count" {
+description = ""
+type = number
+default = 3
+}
+
+IAM USER CREATION FILE
+
+provider "aws" {
+region = "ap-south-1"
+}
+
+resource "aws_iam_user" "two" {
+count = length(var.user_names)
+name = var.user_names[count.index]
+}
+
+variable "user_names" {
+description = ""
+type = list(string)
+default  = ["vinod" , "chandhu" "sunil" , "anil"]
+}
+
+
+TAGS CONCEPT
+
+provider "aws" {
+region = "eu-west-1"
+}
+
+resource "aws_instance" "three" {
+ami = "ami-0b41f7055516b991a"
+instance_type = "t2.micro"
+tags = var.instance_tags
+}
+
+variable "instance_tags" {
+description = ""
+type = map(string)
+default = {
+Name = "appserver"
+Env = "Prod"
+Client = "Swiggy"
+Company = "TCS"
+}
+}
+
+
+
+
+
